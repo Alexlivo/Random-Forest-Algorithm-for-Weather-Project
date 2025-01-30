@@ -7,21 +7,24 @@ from sklearn.metrics import mean_absolute_error, r2_score
 
 # Import datasets
 pd.set_option('future.no_silent_downcasting', True)
-weather = pd.read_csv('Sutton_Bonington_Dataset.csv', index_col="year", na_values='---')
+weather = pd.read_csv('Sutton_Bonington_Dataset.csv', na_values='---')
 
 # Delete null values
 value_to_del = weather.loc["1959":"1960"]
 weather = weather.drop(value_to_del.index)
-weather = weather.drop(columns=["sun", "af", "month", "rain"])
+weather = weather.drop(columns=["sun", "af", "rain"])
 
 # Create new Dataframe
 core_weather = weather
-core_weather.columns = ['temp_max', 'temp_min']
+core_weather.columns = ['year', 'month', 'temp_max', 'temp_min']
 
-print(core_weather)
 
 # Convert core_weather index to DatetimeIndex
-core_weather.index = pd.to_datetime(core_weather.index, format='%Y')
+core_weather["dateInt"] = core_weather["year"].astype(str) + core_weather["month"].astype(str)
+core_weather["date"] = pd.to_datetime(core_weather["dateInt"], format="%Y%m")
+core_weather.index = core_weather["date"]
+core_weather.index = core_weather.index.strftime("%Y-%m")
+print(core_weather.drop(columns=["year", "month", "dateInt", "date"]))
 
 # Set features
 x = core_weather['temp_min']
@@ -50,8 +53,6 @@ r2 = r2_score(y_test, y_pred)
 combined = pd.concat([y_test, pd.Series(y_pred, index=y_test.index)], axis=1)
 combined.columns = ["Actual", "Predicted"]
 
-years = y_test.index
-
 print(f"Mean Absolute Error: {mae}")
 print(f"R-Squared Score: {r2}")
 print(f"Table Showing Actual vs Predicted Values:\n {combined}")
@@ -65,7 +66,7 @@ plt.scatter(y_test.index, y_pred, color='red', label='Predicted')
 plt.title('Temperature Prediction using Random Forest')
 plt.xlabel('Year')
 plt.ylabel('Temperature')
-plt.xticks(years.unique()[::4], rotation=45, ha='right')
+plt.xticks(y_test.index.unique()[::12], rotation=45, ha='right')
 
 plt.legend()
 plt.show()
