@@ -50,7 +50,8 @@ y_pred = rf.predict(x_test)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
 
-combined = pd.concat([y_test, pd.Series(y_pred, index=y_test.index)], axis=1)
+# Create new dataframe to compare actual and predicted values in table form
+combined = pd.concat([y_test, pd.Series(y_pred.round(1), index=y_test.index)], axis=1)
 combined.columns = ["Actual", "Predicted"]
 
 print(f"Mean Absolute Error: {mae}")
@@ -84,3 +85,6 @@ plt.xticks(rotation=0)
 
 plt.legend()
 plt.show()
+
+# Convert DataFrame to csv
+combined.to_csv("Random_Forest_Dataset.csv")
