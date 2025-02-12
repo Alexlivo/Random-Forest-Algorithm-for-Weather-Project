@@ -64,7 +64,7 @@ plt.figure(figsize=(16, 10))
 plt.scatter(y_test.index, y_test, color='blue', label='Actual')
 plt.scatter(y_test.index, y_pred, color='red', label='Predicted')
 
-plt.title('Temperature Prediction using Random Forest')
+plt.title('Max Temperature Prediction using Random Forest')
 plt.xlabel('Year')
 plt.ylabel('Temperature')
 plt.xticks(y_test.index.unique()[::12], rotation=45, ha='right')
@@ -78,7 +78,7 @@ plt.figure(figsize=(12, 6))
 plt.psd(combined["Actual"], color="blue", label="Actual")
 plt.psd(combined["Predicted"], color="red", label="Predicted")
 
-plt.title("Power Spectral Density of Actual vs Predicted Temperature")
+plt.title("Power Spectral Density of Actual vs Maximum Predicted Temperature")
 plt.xlabel("Frequency (cycles/year)")
 plt.ylabel("PSD")
 plt.xticks(rotation=0)
@@ -87,4 +87,4 @@ plt.legend()
 plt.show()
 
 # Convert DataFrame to csv
-combined.to_csv("Random_Forest_Dataset.csv")
+combined.to_csv("Max_Random_Forest_Dataset.csv")
