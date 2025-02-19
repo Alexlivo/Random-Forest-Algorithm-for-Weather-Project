@@ -54,11 +54,17 @@ r2 = r2_score(y_test, y_pred)
 combined = pd.concat([y_test, pd.Series(y_pred.round(1), index=y_test.index)], axis=1)
 combined.columns = ["Actual", "Predicted"]
 
-print(f"Mean Absolute Error: {mae}")
-print(f"R-Squared Score: {r2}")
-print(f"Table Showing Actual vs Predicted Values:\n {combined}")
+# Ensure combined index is in DatetimeIndex format
+combined.index = pd.to_datetime(combined.index, errors='coerce')
+
+# Create new DataFrame combining actual and predicted values for averaging
+yearly_avg = combined.resample("YE").mean().round(1)
+yearly_avg.index = yearly_avg.index.strftime("%Y")
 
 # Scatter Graph Plot
+plt.rc('axes', titlesize=20)
+plt.rc('axes', labelsize=18)
+
 plt.figure(figsize=(16, 10))
 
 plt.scatter(y_test.index, y_test, color='blue', label='Actual')
@@ -66,25 +72,34 @@ plt.scatter(y_test.index, y_pred, color='red', label='Predicted')
 
 plt.title('Max Temperature Prediction using Random Forest')
 plt.xlabel('Year')
-plt.ylabel('Temperature')
+plt.ylabel('Temperature (°C)')
 plt.xticks(y_test.index.unique()[::12], rotation=45, ha='right')
 
 plt.legend()
 plt.show()
 
-# PSD Plot
-plt.figure(figsize=(12, 6))
+# Time Series Graph
+plt.rc('axes', titlesize=20)
+plt.rc('axes', labelsize=18)
 
-plt.psd(combined["Actual"], color="blue", label="Actual")
-plt.psd(combined["Predicted"], color="red", label="Predicted")
+plt.figure(figsize=(16, 8))
 
-plt.title("Power Spectral Density of Actual vs Maximum Predicted Temperature")
-plt.xlabel("Frequency (cycles/year)")
-plt.ylabel("PSD")
-plt.xticks(rotation=0)
+plt.plot(yearly_avg.index, yearly_avg["Actual"], color='blue', label='Actual')
+plt.plot(yearly_avg.index, yearly_avg["Predicted"], color='red', label='Predicted')
 
+plt.title("Time Series Graph of Max Temperature Prediction Comparison (RF)")
+plt.xlabel("Year")
+plt.ylabel("Temperature (°C)")
+plt.xticks(yearly_avg.index, rotation=45, ha='right')
+
+plt.grid(True)
 plt.legend()
 plt.show()
+
+print(f"Mean Absolute Error: {mae}\n")
+print(f"R-Squared Score: {r2}\n")
+print(f"Table Showing Actual vs Predicted Values:\n {combined}\n")
+print(f"Table showing average temps through year:\n {yearly_avg}")
 
 # Convert DataFrame to csv
 combined.to_csv("Max_Random_Forest_Dataset.csv")
