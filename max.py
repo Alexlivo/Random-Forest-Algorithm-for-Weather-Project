@@ -48,7 +48,9 @@ y_pred = rf.predict(x_test)
 
 # Evaluation of model
 mae = mean_absolute_error(y_test, y_pred)
+mae = round(mae, 3)
 r2 = r2_score(y_test, y_pred)
+r2 = round(r2, 3)
 
 # Create new dataframe to compare actual and predicted values in table form
 combined = pd.concat([y_test, pd.Series(y_pred.round(1), index=y_test.index)], axis=1)
