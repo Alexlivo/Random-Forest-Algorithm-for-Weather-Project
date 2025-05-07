@@ -55,7 +55,7 @@ r2 = round(r2, 3)
 # Create new dataframe to compare actual and predicted values in table form
 diff = (y_test - y_pred).round(1)
 combined = pd.concat([y_test, pd.Series(y_pred.round(1), index=y_test.index), diff], axis=1)
-combined.columns = ["Actual", "Predicted", "Diff"]
+combined.columns = ["Actual", "Predicted", "Difference"]
 
 # Ensure combined index is in DatetimeIndex format
 combined.index = pd.to_datetime(combined.index, errors='coerce')

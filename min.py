@@ -53,8 +53,9 @@ r2 = r2_score(x_test, x_pred)
 r2 = round(r2, 3)
 
 # Create new dataframe to compare actual and predicted values in table form
-combined = pd.concat([x_test, pd.Series(x_pred.round(1), index=x_test.index)], axis=1)
-combined.columns = ["Actual", "Predicted"]
+diff = (x_test - x_pred).round(1)
+combined = pd.concat([x_test, pd.Series(x_pred.round(1), index=x_test.index), diff], axis=1)
+combined.columns = ["Actual", "Predicted", "Difference"]
 
 # Ensure combined index is in DatetimeIndex format
 combined.index = pd.to_datetime(combined.index, errors='coerce')
@@ -105,3 +106,66 @@ print(f"Table showing average temps through year:\n {yearly_avg}")
 
 # Convert DataFrame to csv
 combined.to_csv("Min_Random_Forest_Dataset.csv")
+
+# Add month and year for seasonal grouping
+combined["Month"] = combined.index.month
+combined["Year"] = combined.index.year
+
+# Assign season and adjust year for winter
+def assign_season(row):
+    month = row["Month"]
+    year = int(row["Year"])
+    if month in [3, 4, 5]:
+        season = "Spring"
+    elif month in [6, 7, 8]:
+        season = "Summer"
+    elif month in [9, 10, 11]:
+        season = "Autumn"
+    else:
+        season = "Winter"
+        # Shift year forward for winter (e.g., Dec 1995 becomes Winter 1996)
+        if month == 12:
+            year += 1
+    return pd.Series([season, year])
+
+combined[["Season", "Season_Year"]] = combined.apply(assign_season, axis=1)
+
+# Create Season-Year label
+combined["Season_Year"] = combined["Season_Year"].astype(int).astype(str) + " " + combined["Season"]
+
+# Group by Season-Year and calculate mean
+seasonal_year_avg = combined.groupby("Season_Year")[["Actual", "Predicted"]].mean().round(2)
+
+# Sort by date using a helper datetime index
+season_order = {"Winter": 1, "Spring": 2, "Summer": 3, "Autumn": 4}
+seasonal_year_avg["SortKey"] = seasonal_year_avg.index.to_series().apply(
+    lambda x: pd.to_datetime(x.split()[0] + f"-{season_order[x.split()[1]]*3:02d}-01")
+)
+seasonal_year_avg = seasonal_year_avg.sort_values("SortKey").drop(columns=["SortKey"])
+
+# Choose the range or list of years you want to display
+years_to_display = [2006, 2010, 2022]  # ← change as needed
+
+# Extract year part from the index (which is like "2001 Spring")
+seasonal_year_avg_filtered = seasonal_year_avg[
+    seasonal_year_avg.index.to_series().str.extract(r'(\d{4})')[0].astype(int).isin(years_to_display)
+]
+
+# Plot grouped bar chart for selected years
+plt.figure(figsize=(18, 8))
+
+x = np.arange(len(seasonal_year_avg_filtered))
+width = 0.4
+
+plt.bar(x - width/2, seasonal_year_avg_filtered["Actual"], width, label='Actual', color='blue')
+plt.bar(x + width/2, seasonal_year_avg_filtered["Predicted"], width, label='Predicted', color='red')
+
+plt.title(f"Seasonal Max Temperature (Actual vs Predicted) for Selected Years: {years_to_display}")
+plt.xlabel("Season-Year")
+plt.ylabel("Temperature (°C)")
+plt.xticks(x, seasonal_year_avg_filtered.index, rotation=45, size=14)
+plt.grid(axis='y')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
