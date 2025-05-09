@@ -31,8 +31,8 @@ x = core_weather['temp_min']
 y = core_weather['temp_max']
 
 # Split data in training/testing years
-train_data = core_weather.loc[:"1994"]
-test_data = core_weather.loc["1995":]
+train_data = core_weather.loc[:"1989"]
+test_data = core_weather.loc["1990":]
 
 x_train = train_data['temp_min']
 y_train = train_data['temp_max'].values.reshape(-1, 1)
